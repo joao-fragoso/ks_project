@@ -44,21 +44,51 @@ entity control_unit is
     );
 end control_unit;
 
+--22
 architecture rtl of control_unit is
--- signal added to test environment... remove this
-signal counter : std_logic_vector(7 downto 0);
+
+    type state_type is (FETCH, DECODE, NEXT1, NEXT2, ULA1, ULA2, LOAD1, LOAD2);
+    signal state : state_type;
+    
 begin
 
---process to test environment ... remove this
-    main: process(clk, rst_n)
+process(clk, rst_n)
     begin
-        if (rst_n = '0') then
-            counter <= (others => '0');
-        elsif (clk'event and clk='1') then
-            counter <= counter + 1;
-        end if;
-    end process main;
-    halt <= '1' when counter = x"5f" else '0';
--- remove until here....
+    if rst_n = '1' then
+        state <= FETCH;
+        
+    elsif(rising_edge(clk)) then
+        case state is
+            when FETCH=>
+            ir_enable <= '1';
+            state <= DECODE;
+            
+            when DECODE=>
+                if decoded_instruction = I_LOAD then
+                    state <= LOAD1;
+                 elsif decoded_instruction = I_STORE then
+                 
+                 else
+            end if;
+            when LOAD1=>
+                addr_sel <= '0';
+                state <= LOAD2;
+            when LOAD2=>
+            c_sel <= '1'; 
+            write_reg_enable <= '1';
+            state <= NEXT1;
+            when ULA1 =>
+            if decoded_instruction = I_ADD then
+                    operation <= "00";
+                    state <= LOAD1;
+            elsif decoded_instruction = I_SUB then
+                    operation <= "01";
+            end if;
+           end case;
+            
+     end if;
+end process;
+
+
 end rtl;
 
